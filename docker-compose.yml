@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: reporting-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/app.db:/app/app.db
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key-in-production}
+      - DATABASE_URL=sqlite:///./app.db
+      - UPLOAD_DIR=/app/uploads
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: reporting-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+networks:
+  default:
+    name: reporting-network
