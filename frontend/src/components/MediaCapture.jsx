@@ -6,6 +6,7 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
     const [preview, setPreview] = useState(null);
     const [recordingTime, setRecordingTime] = useState(0);
     const [error, setError] = useState('');
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     const videoRef = useRef(null);
     const mediaRecorderRef = useRef(null);
@@ -31,6 +32,12 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
 
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
+                // Explicitly play to ensure live view on some devices
+                try {
+                    await videoRef.current.play();
+                } catch (playErr) {
+                    console.error('Video play error:', playErr);
+                }
             }
 
             setCapturing(true);
@@ -50,23 +57,44 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
     };
 
     const capturePhoto = () => {
+        if (!videoRef.current) return;
+
+        // Ensure video has dimensions
+        if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
+            setError('Camera is not ready yet. Please wait a moment.');
+            return;
+        }
+
         const canvas = document.createElement('canvas');
         canvas.width = videoRef.current.videoWidth;
         canvas.height = videoRef.current.videoHeight;
         const ctx = canvas.getContext('2d');
+
+        // Draw whatever is on the video element, even if black
         ctx.drawImage(videoRef.current, 0, 0);
 
         canvas.toBlob((blob) => {
+            if (!blob) {
+                setError('Failed to capture image.');
+                return;
+            }
             const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
             setPreview(URL.createObjectURL(blob));
             onCapture(file);
             stopCamera();
+            setShowSuccessModal(true);
+            setTimeout(() => setShowSuccessModal(false), 2000);
         }, 'image/jpeg', 0.9);
     };
 
     const startRecording = () => {
         chunksRef.current = [];
         const stream = videoRef.current.srcObject;
+
+        if (!stream) {
+            setError('No camera stream available.');
+            return;
+        }
 
         mediaRecorderRef.current = new MediaRecorder(stream);
 
@@ -84,6 +112,8 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
             stopCamera();
             setRecordingTime(0);
             clearInterval(timerRef.current);
+            setShowSuccessModal(true);
+            setTimeout(() => setShowSuccessModal(false), 2000);
         };
 
         mediaRecorderRef.current.start();
@@ -112,9 +142,21 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
     };
 
     return (
-        <div className="media-capture">
+        <div className="media-capture position-relative">
             {error && (
                 <div className="alert alert-danger mb-3">{error}</div>
+            )}
+
+            {showSuccessModal && (
+                <div className="position-absolute top-50 start-50 translate-middle bg-success text-white p-3 rounded shadow" style={{ zIndex: 1000 }}>
+                    <div className="d-flex align-items-center gap-2">
+                        <span style={{ fontSize: '1.5rem' }}>✅</span>
+                        <div>
+                            <strong>Captured!</strong>
+                            <div className="small">Media saved successfully.</div>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {!preview ? (
@@ -144,7 +186,7 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
                                 playsInline
                                 muted
                                 className="w-100 rounded bg-black"
-                                style={{ maxHeight: '400px' }}
+                                style={{ maxHeight: '400px', minHeight: '200px' }}
                             />
 
                             {mediaType === 'video' && mediaRecorderRef.current?.state === 'recording' && (
