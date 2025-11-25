@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
-import anime from 'animejs/lib/anime.es.js';
+// import { animate } from 'animejs';
 
 export function Login() {
     const [email, setEmail] = useState('');
@@ -17,7 +17,8 @@ export function Login() {
 
     useEffect(() => {
         // Anime.js animation for the logo
-        anime({
+        /*
+        animate({
             targets: logoRef.current,
             translateY: [-20, 0],
             opacity: [0, 1],
@@ -25,6 +26,7 @@ export function Login() {
             easing: 'easeOutElastic(1, .8)',
             delay: 200
         });
+        */
     }, []);
 
     const handleSubmit = async (e) => {
