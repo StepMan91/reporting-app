@@ -18,6 +18,7 @@ export function Login() {
 
         try {
             await login(email, password);
+            window.alert('Login successful! Click OK to continue.');
             navigate('/dashboard');
         } catch (err) {
             setError(err.response?.data?.detail || 'Login failed. Please try again.');

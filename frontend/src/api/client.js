@@ -27,6 +27,10 @@ apiClient.interceptors.response.use(
     },
     (error) => {
         if (error.response?.status === 401) {
+            // Don't redirect if checking auth status
+            if (error.config?.url?.includes('/auth/me')) {
+                return Promise.reject(error);
+            }
             // Redirect to login on unauthorized
             if (!window.location.pathname.includes('/login')) {
                 window.location.href = '/login';

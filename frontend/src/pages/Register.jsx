@@ -32,6 +32,7 @@ export function Register() {
             await register(email, password);
             // Auto-login after registration
             await login(email, password);
+            window.alert('Registration successful! Click OK to continue.');
             navigate('/dashboard');
         } catch (err) {
             setError(err.response?.data?.detail || 'Registration failed. Please try again.');
