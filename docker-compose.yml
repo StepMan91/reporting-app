@@ -14,7 +14,7 @@ services:
       - DATABASE_URL=sqlite:///./app.db
       - UPLOAD_DIR=/app/uploads
       - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
-      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost
+      - CORS_ORIGINS=["http://localhost:5173","http://localhost:3000","http://localhost"]
     restart: unless-stopped
 
   frontend:
