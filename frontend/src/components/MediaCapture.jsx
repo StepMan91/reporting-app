@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export function MediaCapture({ onCapture, maxDuration = 15 }) {
     const [capturing, setCapturing] = useState(false);
@@ -7,28 +7,29 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
     const [recordingTime, setRecordingTime] = useState(0);
     const [error, setError] = useState('');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [facingMode, setFacingMode] = useState('environment'); // 'environment' or 'user'
 
     const videoRef = useRef(null);
     const mediaRecorderRef = useRef(null);
     const chunksRef = useRef([]);
     const timerRef = useRef(null);
+    const fileInputRef = useRef(null);
+
+    // Restart camera when facingMode changes if already capturing
+    useEffect(() => {
+        if (capturing) {
+            stopCamera();
+            startCamera();
+        }
+    }, [facingMode]);
 
     const startCamera = async () => {
         setError('');
         try {
-            let stream;
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment' },
-                    audio: mediaType === 'video'
-                });
-            } catch (err) {
-                console.warn('Environment camera failed, trying user camera', err);
-                stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'user' },
-                    audio: mediaType === 'video'
-                });
-            }
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: facingMode },
+                audio: mediaType === 'video'
+            });
 
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
@@ -44,6 +45,7 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
         } catch (error) {
             console.error('Camera error:', error);
             setError('Could not access camera. Please ensure you have granted permissions and are using HTTPS or localhost.');
+            setCapturing(false);
         }
     };
 
@@ -53,7 +55,40 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
             tracks.forEach(track => track.stop());
             videoRef.current.srcObject = null;
         }
+        // Don't set capturing to false here if we are just switching cameras, 
+        // but since we use this for 'Cancel' too, we need to be careful.
+        // For simplicity, the effect hook handles the restart, so we just stop tracks here.
+    };
+
+    const handleStopClick = () => {
+        stopCamera();
         setCapturing(false);
+    };
+
+    const toggleCamera = () => {
+        setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
+    };
+
+    const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const isImage = file.type.startsWith('image/');
+        const isVideo = file.type.startsWith('video/');
+
+        if (!isImage && !isVideo) {
+            setError('Please upload a valid image or video file.');
+            return;
+        }
+
+        const url = URL.createObjectURL(file);
+        setPreview(url);
+        setMediaType(isImage ? 'image' : 'video');
+
+        // Pass file and metadata
+        onCapture(file, 'upload');
+        setShowSuccessModal(true);
+        setTimeout(() => setShowSuccessModal(false), 2000);
     };
 
     const capturePhoto = () => {
@@ -80,8 +115,8 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
             }
             const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
             setPreview(URL.createObjectURL(blob));
-            onCapture(file);
-            stopCamera();
+            onCapture(file, facingMode);
+            handleStopClick();
             setShowSuccessModal(true);
             setTimeout(() => setShowSuccessModal(false), 2000);
         }, 'image/jpeg', 0.9);
@@ -108,8 +143,8 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
             const blob = new Blob(chunksRef.current, { type: 'video/webm' });
             const file = new File([blob], 'video.webm', { type: 'video/webm' });
             setPreview(URL.createObjectURL(blob));
-            onCapture(file);
-            stopCamera();
+            onCapture(file, facingMode);
+            handleStopClick();
             setRecordingTime(0);
             clearInterval(timerRef.current);
             setShowSuccessModal(true);
@@ -138,7 +173,9 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
 
     const retake = () => {
         setPreview(null);
-        onCapture(null);
+        onCapture(null, null);
+        // Clean up object URL if it was an upload
+        if (preview) URL.revokeObjectURL(preview);
     };
 
     return (
@@ -159,9 +196,17 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
                 </div>
             )}
 
+            <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                accept="image/*,video/*"
+                onChange={handleFileUpload}
+            />
+
             {!preview ? (
                 <>
-                    <div className="mb-3 d-flex gap-2 justify-content-center">
+                    <div className="mb-3 d-flex gap-2 justify-content-center flex-wrap">
                         <button
                             type="button"
                             className={`btn ${mediaType === 'image' ? 'btn-primary-zen' : 'btn-outline-secondary'}`}
@@ -176,6 +221,13 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
                         >
                             🎥 Video
                         </button>
+                        <button
+                            type="button"
+                            className="btn btn-outline-secondary"
+                            onClick={() => fileInputRef.current.click()}
+                        >
+                            📤 Upload
+                        </button>
                     </div>
 
                     {capturing ? (
@@ -186,7 +238,7 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
                                 playsInline
                                 muted
                                 className="w-100 rounded bg-black"
-                                style={{ maxHeight: '400px', minHeight: '200px' }}
+                                style={{ maxHeight: '400px', minHeight: '200px', transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }}
                             />
 
                             {mediaType === 'video' && mediaRecorderRef.current?.state === 'recording' && (
@@ -195,13 +247,16 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
                                 </div>
                             )}
 
-                            <div className="mt-3 d-flex gap-2 justify-content-center">
+                            <div className="mt-3 d-flex gap-2 justify-content-center flex-wrap">
                                 {mediaType === 'image' ? (
                                     <>
                                         <button type="button" className="btn btn-primary-zen" onClick={capturePhoto}>
                                             📸 Snap
                                         </button>
-                                        <button type="button" className="btn btn-secondary" onClick={stopCamera}>
+                                        <button type="button" className="btn btn-outline-light" onClick={toggleCamera}>
+                                            🔄 Flip
+                                        </button>
+                                        <button type="button" className="btn btn-secondary" onClick={handleStopClick}>
                                             Cancel
                                         </button>
                                     </>
@@ -216,7 +271,10 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
                                                 <button type="button" className="btn btn-primary-zen" onClick={startRecording}>
                                                     ⏺ Record
                                                 </button>
-                                                <button type="button" className="btn btn-secondary" onClick={stopCamera}>
+                                                <button type="button" className="btn btn-outline-light" onClick={toggleCamera}>
+                                                    🔄 Flip
+                                                </button>
+                                                <button type="button" className="btn btn-secondary" onClick={handleStopClick}>
                                                     Cancel
                                                 </button>
                                             </>

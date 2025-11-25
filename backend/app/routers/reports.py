@@ -41,6 +41,7 @@ async def create_report(
     severity_index: int = Form(..., ge=0, le=100),
     latitude: Optional[float] = Form(None),
     longitude: Optional[float] = Form(None),
+    camera_used: Optional[str] = Form(None),
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -91,7 +92,8 @@ async def create_report(
         severity_index=severity_index,
         latitude=latitude,
         longitude=longitude,
-        device_info=device_info
+        device_info=device_info,
+        camera_used=camera_used
     )
     
     db.add(db_report)

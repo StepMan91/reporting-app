@@ -34,6 +34,7 @@ class ReportCreate(BaseModel):
     severity_index: int = Field(..., ge=0, le=100)
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    camera_used: Optional[str] = None
     
     @validator('description')
     def validate_word_count(cls, v):
@@ -54,6 +55,7 @@ class ReportResponse(BaseModel):
     latitude: Optional[float]
     longitude: Optional[float]
     device_info: Optional[str]
+    camera_used: Optional[str]
     created_at: datetime
     
     class Config:

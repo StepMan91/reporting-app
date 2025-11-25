@@ -35,6 +35,7 @@ class Report(Base):
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
     device_info = Column(String, nullable=True)
+    camera_used = Column(String, nullable=True)  # 'front', 'environment', or 'upload'
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     
     # Relationship

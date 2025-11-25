@@ -9,6 +9,7 @@ import apiClient from '../api/client';
 
 export function CreateReport() {
     const [mediaFile, setMediaFile] = useState(null);
+    const [cameraUsed, setCameraUsed] = useState(null);
     const [description, setDescription] = useState('');
     const [behaviorRating, setBehaviorRating] = useState(0);
     const [severityIndex, setSeverityIndex] = useState(50);
@@ -21,6 +22,11 @@ export function CreateReport() {
 
     const wordCount = description.trim().split(/\s+/).filter(Boolean).length;
     const isWordCountValid = wordCount > 0 && wordCount <= 150;
+
+    const handleCapture = (file, cameraInfo) => {
+        setMediaFile(file);
+        setCameraUsed(cameraInfo);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -49,6 +55,10 @@ export function CreateReport() {
             formData.append('description', description);
             formData.append('behavior_rating', behaviorRating);
             formData.append('severity_index', severityIndex);
+
+            if (cameraUsed) {
+                formData.append('camera_used', cameraUsed);
+            }
 
             if (location) {
                 formData.append('latitude', location.latitude);
@@ -88,7 +98,7 @@ export function CreateReport() {
                         <form onSubmit={handleSubmit}>
                             <div className="mb-4">
                                 <label className="form-label text-accent-1">Media (Photo or Video)</label>
-                                <MediaCapture onCapture={setMediaFile} maxDuration={15} />
+                                <MediaCapture onCapture={handleCapture} maxDuration={15} />
                             </div>
 
                             <div className="mb-4">
