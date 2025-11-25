@@ -59,8 +59,10 @@ export function useAuth() {
 
     const logout = async () => {
         try {
-            // Optional: call backend logout if needed, though JWT is stateless
+            // Optional: call backend logout if needed
             // await apiClient.post('/auth/logout'); 
+        } catch (error) {
+            console.error("Logout error:", error);
         } finally {
             localStorage.removeItem('token');
             delete apiClient.defaults.headers.common['Authorization'];

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
@@ -7,13 +7,17 @@ import { ReportsList } from './pages/ReportsList';
 import { ReportDetail } from './pages/ReportDetail';
 import { Contact } from './pages/Contact';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import './index.css';
-
 import { useAuth } from './hooks/useAuth';
-import { Link } from 'react-router-dom';
+import './index.css';
 
 function Layout({ children }) {
     const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        await logout();
+        navigate('/login');
+    };
 
     return (
         <div className="d-flex flex-column min-vh-100">
@@ -28,7 +32,7 @@ function Layout({ children }) {
                         <div className="d-flex align-items-center gap-3">
                             <span className="text-white d-none d-md-block">{user.email}</span>
                             <button
-                                onClick={logout}
+                                onClick={handleLogout}
                                 className="btn btn-outline-light btn-sm"
                             >
                                 Logout

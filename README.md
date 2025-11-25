@@ -146,3 +146,13 @@ MIT
 ## Support
 
 For issues or questions, contact admin@example.com
+
+## Color Palette (Zen Theme)
+
+| Color Name | Hex Code | Usage |
+| :--- | :--- | :--- |
+| **Deep Teal** | #0E3332 | Main Background (--primary-bg) |
+| **Dark Red-Brown** | #5C3437 | Secondary Background, Cards (--secondary-bg) |
+| **Muted Pink** | #BA8891 | Text, Accents (--accent-1) |
+| **Peach** | #E8ADA5 | Highlights (--accent-2) |
+| **Salmon** | #ED7A69 | Buttons, Call to Action (--accent-3) |

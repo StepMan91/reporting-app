@@ -5,6 +5,7 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
     const [mediaType, setMediaType] = useState('image');
     const [preview, setPreview] = useState(null);
     const [recordingTime, setRecordingTime] = useState(0);
+    const [error, setError] = useState('');
 
     const videoRef = useRef(null);
     const mediaRecorderRef = useRef(null);
@@ -12,11 +13,21 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
     const timerRef = useRef(null);
 
     const startCamera = async () => {
+        setError('');
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' },
-                audio: mediaType === 'video'
-            });
+            let stream;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' },
+                    audio: mediaType === 'video'
+                });
+            } catch (err) {
+                console.warn('Environment camera failed, trying user camera', err);
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user' },
+                    audio: mediaType === 'video'
+                });
+            }
 
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
@@ -24,7 +35,8 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
 
             setCapturing(true);
         } catch (error) {
-            alert('Camera access denied. Please enable camera permissions.');
+            console.error('Camera error:', error);
+            setError('Could not access camera. Please ensure you have granted permissions and are using HTTPS or localhost.');
         }
     };
 
@@ -101,62 +113,51 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
 
     return (
         <div className="media-capture">
+            {error && (
+                <div className="alert alert-danger mb-3">{error}</div>
+            )}
+
             {!preview ? (
                 <>
-                    <div className="form-group">
-                        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-                            <button
-                                type="button"
-                                className={`btn ${mediaType === 'image' ? 'btn-primary' : 'btn-secondary'}`}
-                                onClick={() => setMediaType('image')}
-                            >
-                                📷 Photo
-                            </button>
-                            <button
-                                type="button"
-                                className={`btn ${mediaType === 'video' ? 'btn-primary' : 'btn-secondary'}`}
-                                onClick={() => setMediaType('video')}
-                            >
-                                🎥 Video
-                            </button>
-                        </div>
+                    <div className="mb-3 d-flex gap-2 justify-content-center">
+                        <button
+                            type="button"
+                            className={`btn ${mediaType === 'image' ? 'btn-primary-zen' : 'btn-outline-secondary'}`}
+                            onClick={() => setMediaType('image')}
+                        >
+                            📷 Photo
+                        </button>
+                        <button
+                            type="button"
+                            className={`btn ${mediaType === 'video' ? 'btn-primary-zen' : 'btn-outline-secondary'}`}
+                            onClick={() => setMediaType('video')}
+                        >
+                            🎥 Video
+                        </button>
                     </div>
 
                     {capturing ? (
-                        <div style={{ position: 'relative' }}>
+                        <div className="position-relative">
                             <video
                                 ref={videoRef}
                                 autoPlay
                                 playsInline
                                 muted
-                                style={{
-                                    width: '100%',
-                                    maxHeight: '400px',
-                                    borderRadius: 'var(--radius-md)',
-                                    backgroundColor: '#000'
-                                }}
+                                className="w-100 rounded bg-black"
+                                style={{ maxHeight: '400px' }}
                             />
 
                             {mediaType === 'video' && mediaRecorderRef.current?.state === 'recording' && (
-                                <div style={{
-                                    position: 'absolute',
-                                    top: '1rem',
-                                    right: '1rem',
-                                    background: 'rgba(239, 68, 68, 0.9)',
-                                    color: 'white',
-                                    padding: '0.5rem 1rem',
-                                    borderRadius: 'var(--radius-md)',
-                                    fontWeight: '600'
-                                }}>
+                                <div className="position-absolute top-0 end-0 m-3 badge bg-danger p-2">
                                     ⏺ {recordingTime}s / {maxDuration}s
                                 </div>
                             )}
 
-                            <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
+                            <div className="mt-3 d-flex gap-2 justify-content-center">
                                 {mediaType === 'image' ? (
                                     <>
-                                        <button type="button" className="btn btn-primary" onClick={capturePhoto}>
-                                            📸 Take Photo
+                                        <button type="button" className="btn btn-primary-zen" onClick={capturePhoto}>
+                                            📸 Snap
                                         </button>
                                         <button type="button" className="btn btn-secondary" onClick={stopCamera}>
                                             Cancel
@@ -166,12 +167,12 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
                                     <>
                                         {mediaRecorderRef.current?.state === 'recording' ? (
                                             <button type="button" className="btn btn-danger" onClick={stopRecording}>
-                                                ⏹ Stop Recording
+                                                ⏹ Stop
                                             </button>
                                         ) : (
                                             <>
-                                                <button type="button" className="btn btn-primary" onClick={startRecording}>
-                                                    ⏺ Start Recording
+                                                <button type="button" className="btn btn-primary-zen" onClick={startRecording}>
+                                                    ⏺ Record
                                                 </button>
                                                 <button type="button" className="btn btn-secondary" onClick={stopCamera}>
                                                     Cancel
@@ -183,25 +184,17 @@ export function MediaCapture({ onCapture, maxDuration = 15 }) {
                             </div>
                         </div>
                     ) : (
-                        <button type="button" className="btn btn-primary" onClick={startCamera}>
+                        <button type="button" className="btn btn-primary-zen w-100" onClick={startCamera}>
                             {mediaType === 'image' ? '📷 Open Camera' : '🎥 Open Camera'}
                         </button>
                     )}
                 </>
             ) : (
-                <div>
+                <div className="text-center">
                     {mediaType === 'image' ? (
-                        <img src={preview} alt="Preview" style={{
-                            width: '100%',
-                            borderRadius: 'var(--radius-md)',
-                            marginBottom: '1rem'
-                        }} />
+                        <img src={preview} alt="Preview" className="img-fluid rounded mb-3" />
                     ) : (
-                        <video src={preview} controls style={{
-                            width: '100%',
-                            borderRadius: 'var(--radius-md)',
-                            marginBottom: '1rem'
-                        }} />
+                        <video src={preview} controls className="w-100 rounded mb-3" />
                     )}
                     <button type="button" className="btn btn-secondary" onClick={retake}>
                         🔄 Retake
