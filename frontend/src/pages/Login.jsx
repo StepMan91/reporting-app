@@ -21,66 +21,83 @@ export function Login() {
             window.alert('Login successful! Click OK to continue.');
             navigate('/dashboard');
         } catch (err) {
-            setError(err.response?.data?.detail || 'Login failed. Please try again.');
+            console.error(err);
+            setError(err.response?.data?.detail || 'Login failed. Please check your credentials.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="page flex items-center justify-center" style={{ minHeight: '100vh' }}>
-            <div className="container" style={{ maxWidth: '400px' }}>
-                <div className="card">
-                    <h1 className="page-title text-center">Welcome Back</h1>
-                    <p className="text-muted text-center mb-lg">Sign in to your account</p>
+        <div className="container py-5">
+            <div className="row justify-content-center">
+                <div className="col-md-6 col-lg-4">
+                    <div className="card shadow-sm border-0">
+                        <div className="card-body p-4">
+                            <div className="text-center mb-4">
+                                <h1 className="h3 mb-3 fw-normal">Welcome Back</h1>
+                                <p className="text-muted">Sign in to continue reporting</p>
+                            </div>
 
-                    <form onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label className="form-label">Email</label>
-                            <input
-                                type="email"
-                                className="form-input"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                autoComplete="email"
-                                placeholder="your@email.com"
-                            />
+                            {error && (
+                                <div className="alert alert-danger" role="alert">
+                                    {error}
+                                </div>
+                            )}
+
+                            <form onSubmit={handleSubmit}>
+                                <div className="mb-3">
+                                    <label className="form-label">Email address</label>
+                                    <input
+                                        type="email"
+                                        className="form-control"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                        autoComplete="email"
+                                        placeholder="name@example.com"
+                                    />
+                                </div>
+
+                                <div className="mb-4">
+                                    <label className="form-label">Password</label>
+                                    <input
+                                        type="password"
+                                        className="form-control"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                        autoComplete="current-password"
+                                        placeholder="••••••••"
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary w-100 py-2 mb-3"
+                                    disabled={loading}
+                                >
+                                    {loading ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                            Signing in...
+                                        </>
+                                    ) : (
+                                        'Sign In'
+                                    )}
+                                </button>
+
+                                <div className="text-center">
+                                    <p className="mb-0 text-muted">
+                                        Don't have an account?{' '}
+                                        <Link to="/register" className="text-decoration-none">
+                                            Register here
+                                        </Link>
+                                    </p>
+                                </div>
+                            </form>
                         </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Password</label>
-                            <input
-                                type="password"
-                                className="form-input"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                autoComplete="current-password"
-                                placeholder="••••••••"
-                            />
-                        </div>
-
-                        {error && (
-                            <div className="error-text mb-md">{error}</div>
-                        )}
-
-                        <button
-                            type="submit"
-                            className="btn btn-primary"
-                            style={{ width: '100%' }}
-                            disabled={loading}
-                        >
-                            {loading ? 'Signing in...' : 'Sign In'}
-                        </button>
-                    </form>
-
-                    <p className="text-center mt-md text-muted">
-                        Don't have an account?{' '}
-                        <Link to="/register" style={{ color: 'var(--accent-primary)' }}>
-                            Register
-                        </Link>
-                    </p>
+                    </div>
                 </div>
             </div>
         </div>

@@ -35,6 +35,7 @@ export function Register() {
             window.alert('Registration successful! Click OK to continue.');
             navigate('/dashboard');
         } catch (err) {
+            console.error(err);
             setError(err.response?.data?.detail || 'Registration failed. Please try again.');
         } finally {
             setLoading(false);
@@ -42,73 +43,89 @@ export function Register() {
     };
 
     return (
-        <div className="page flex items-center justify-center" style={{ minHeight: '100vh' }}>
-            <div className="container" style={{ maxWidth: '400px' }}>
-                <div className="card">
-                    <h1 className="page-title text-center">Create Account</h1>
-                    <p className="text-muted text-center mb-lg">Join us to start reporting</p>
+        <div className="container py-5">
+            <div className="row justify-content-center">
+                <div className="col-md-6 col-lg-4">
+                    <div className="card shadow-sm border-0">
+                        <div className="card-body p-4">
+                            <div className="text-center mb-4">
+                                <h1 className="h3 mb-3 fw-normal">Create Account</h1>
+                                <p className="text-muted">Join us to start reporting</p>
+                            </div>
 
-                    <form onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label className="form-label">Email</label>
-                            <input
-                                type="email"
-                                className="form-input"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                autoComplete="email"
-                                placeholder="your@email.com"
-                            />
+                            {error && (
+                                <div className="alert alert-danger" role="alert">
+                                    {error}
+                                </div>
+                            )}
+
+                            <form onSubmit={handleSubmit}>
+                                <div className="mb-3">
+                                    <label className="form-label">Email address</label>
+                                    <input
+                                        type="email"
+                                        className="form-control"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                        autoComplete="email"
+                                        placeholder="name@example.com"
+                                    />
+                                </div>
+
+                                <div className="mb-3">
+                                    <label className="form-label">Password</label>
+                                    <input
+                                        type="password"
+                                        className="form-control"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                        autoComplete="new-password"
+                                        placeholder="••••••••"
+                                    />
+                                    <div className="form-text">Minimum 6 characters</div>
+                                </div>
+
+                                <div className="mb-4">
+                                    <label className="form-label">Confirm Password</label>
+                                    <input
+                                        type="password"
+                                        className="form-control"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        required
+                                        autoComplete="new-password"
+                                        placeholder="••••••••"
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary w-100 py-2 mb-3"
+                                    disabled={loading}
+                                >
+                                    {loading ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                            Creating Account...
+                                        </>
+                                    ) : (
+                                        'Create Account'
+                                    )}
+                                </button>
+
+                                <div className="text-center">
+                                    <p className="mb-0 text-muted">
+                                        Already have an account?{' '}
+                                        <Link to="/login" className="text-decoration-none">
+                                            Sign In
+                                        </Link>
+                                    </p>
+                                </div>
+                            </form>
                         </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Password</label>
-                            <input
-                                type="password"
-                                className="form-input"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                autoComplete="new-password"
-                                placeholder="••••••••"
-                            />
-                            <span className="helper-text">Minimum 6 characters</span>
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Confirm Password</label>
-                            <input
-                                type="password"
-                                className="form-input"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required
-                                autoComplete="new-password"
-                                placeholder="••••••••"
-                            />
-                        </div>
-
-                        {error && (
-                            <div className="error-text mb-md">{error}</div>
-                        )}
-
-                        <button
-                            type="submit"
-                            className="btn btn-primary"
-                            style={{ width: '100%' }}
-                            disabled={loading}
-                        >
-                            {loading ? 'Creating Account...' : 'Create Account'}
-                        </button>
-                    </form>
-
-                    <p className="text-center mt-md text-muted">
-                        Already have an account?{' '}
-                        <Link to="/login" style={{ color: 'var(--accent-primary)' }}>
-                            Sign In
-                        </Link>
-                    </p>
+                    </div>
                 </div>
             </div>
         </div>

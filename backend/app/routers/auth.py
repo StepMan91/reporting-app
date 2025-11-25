@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 from .. import models, schemas
 from ..database import get_db
-from ..auth import verify_password, get_password_hash, create_access_token
+from ..auth import verify_password, get_password_hash, create_access_token, get_current_user
 from ..config import settings
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
@@ -82,8 +82,9 @@ async def logout(response: Response):
     return {"message": "Successfully logged out"}
 
 
+
 @router.get("/me", response_model=schemas.UserResponse)
-async def get_current_user_info(current_user: models.User = Depends(get_db)):
+async def get_current_user_info(current_user: models.User = Depends(get_current_user)):
     """
     Get current user information
     """

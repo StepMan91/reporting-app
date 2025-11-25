@@ -10,10 +10,20 @@ export function useAuth() {
     }, []);
 
     const checkAuth = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setLoading(false);
+            return;
+        }
+
         try {
+            // Set default header for all requests
+            apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             const response = await apiClient.get('/auth/me');
             setUser(response.data);
         } catch (error) {
+            localStorage.removeItem('token');
+            delete apiClient.defaults.headers.common['Authorization'];
             setUser(null);
         } finally {
             setLoading(false);
@@ -31,6 +41,10 @@ export function useAuth() {
             },
         });
 
+        const { access_token } = response.data;
+        localStorage.setItem('token', access_token);
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+
         await checkAuth();
         return response.data;
     };
@@ -44,8 +58,14 @@ export function useAuth() {
     };
 
     const logout = async () => {
-        await apiClient.post('/auth/logout');
-        setUser(null);
+        try {
+            // Optional: call backend logout if needed, though JWT is stateless
+            // await apiClient.post('/auth/logout'); 
+        } finally {
+            localStorage.removeItem('token');
+            delete apiClient.defaults.headers.common['Authorization'];
+            setUser(null);
+        }
     };
 
     return {
