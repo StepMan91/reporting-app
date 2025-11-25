@@ -1,73 +1,69 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 
 export function Dashboard() {
     const { user } = useAuth();
     const { t } = useTranslation();
 
-    const getFirstName = (email) => {
-        if (!email) return 'User';
-        const namePart = email.split('@')[0];
-        const firstName = namePart.split('.')[0];
-        return firstName.charAt(0).toUpperCase() + firstName.slice(1);
-    };
-
-    const menuItems = [
-        {
-            title: t('create_report'),
-            description: 'Document a new incident',
-            icon: '�',
-            link: '/create-report',
-            color: 'var(--accent-3)'
-        },
-        {
-            title: t('reports'),
-            description: 'View your previous reports',
-            icon: '📊',
-            link: '/reports',
-            color: 'var(--accent-2)'
-        },
-        {
-            title: t('contact'),
-            description: 'Get in touch with admin',
-            icon: '💬',
-            link: '/contact',
-            color: 'var(--accent-1)'
-        }
-    ];
+    // Extract first name from email (e.g., "bastien.caspani@web.com" -> "Bastien")
+    const firstName = user?.email
+        ? user.email.split('.')[0].charAt(0).toUpperCase() + user.email.split('.')[0].slice(1)
+        : 'User';
 
     return (
-        <div className="container">
-            <div className="text-center mb-5">
-                <h1 className="display-4 fw-bold text-accent-2">
-                    {t('welcome')}, {getFirstName(user?.email)}!
+        <div className="flex-column gap-lg">
+            <div className="text-center mb-4">
+                <h1 style={{ fontSize: '2.5rem', fontWeight: '700', color: 'var(--secondary)' }}>
+                    {t('welcome_user', { name: firstName })}
                 </h1>
-                <p className="lead text-accent-1">What would you like to do today?</p>
+                <p className="text-muted" style={{ fontSize: '1.2rem' }}>
+                    {t('dashboard_subtitle')}
+                </p>
             </div>
 
-            <div className="row g-4">
-                {menuItems.map((item) => (
-                    <div key={item.title} className="col-md-4">
-                        <Link to={item.link} className="text-decoration-none">
-                            <div className="card-zen h-100 p-4 text-center transition-transform hover-scale">
-                                <div
-                                    className="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
-                                    style={{
-                                        width: '80px',
-                                        height: '80px',
-                                        backgroundColor: item.color,
-                                        fontSize: '2.5rem'
-                                    }}
-                                >
-                                    {item.icon}
-                                </div>
-                                <h3 className="h4 mb-2 text-white">{item.title}</h3>
-                                <p className="text-white-50 mb-0">{item.description}</p>
-                            </div>
-                        </Link>
-                    </div>
-                ))}
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: '2rem'
+            }}>
+                {/* Create Report Card */}
+                <div className="card text-center" style={{ transition: 'transform 0.2s' }}>
+                    <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📝</div>
+                    <h3 style={{ marginBottom: '1rem', color: 'var(--primary)' }}>{t('create_new_report')}</h3>
+                    <p className="text-muted mb-4">
+                        Document incidents with photos, videos, and detailed descriptions.
+                    </p>
+                    <Link to="/create-report" className="btn btn-primary w-100">
+                        {t('start_report')}
+                    </Link>
+                </div>
+
+                {/* View Reports Card */}
+                <div className="card text-center" style={{ transition: 'transform 0.2s' }}>
+                    <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📊</div>
+                    <h3 style={{ marginBottom: '1rem', color: 'var(--primary)' }}>{t('view_history')}</h3>
+                    <p className="text-muted mb-4">
+                        Access your past reports, check status, and review details.
+                    </p>
+                    <Link to="/reports" className="btn btn-outline w-100">
+                        {t('view_reports')}
+                    </Link>
+                </div>
+
+                {/* Contact Card */}
+                <div className="card text-center" style={{ transition: 'transform 0.2s' }}>
+                    <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📞</div>
+                    <h3 style={{ marginBottom: '1rem', color: 'var(--primary)' }}>{t('contact_support')}</h3>
+                    <p className="text-muted mb-4">
+                        Need help? Get in touch with our support team.
+                    </p>
+                    <Link to="/contact" className="btn btn-secondary w-100">
+                        {t('contact_us')}
+                    </Link>
+                </div>
             </div>
         </div>
     );
