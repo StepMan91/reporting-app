@@ -32,6 +32,11 @@ export function ReportsList() {
         fetchReports();
     }, [pagination.skip, pagination.limit, sort, filters]); // Re-fetch when these change
 
+    // Force fetch on mount to ensure fresh data
+    useEffect(() => {
+        fetchReports();
+    }, []);
+
     const fetchReports = async () => {
         setLoading(true);
         try {
@@ -40,7 +45,8 @@ export function ReportsList() {
                 limit: pagination.limit,
                 sort_by: sort.by,
                 sort_order: sort.order,
-                ...filters
+                ...filters,
+                _t: new Date().getTime() // Cache buster
             };
             // Remove empty filters
             Object.keys(params).forEach(key => {
@@ -95,6 +101,9 @@ export function ReportsList() {
             <div className="text-center mb-4">
                 <h2 style={{ color: 'var(--secondary)', marginBottom: '0.5rem' }}>{t('my_reports')}</h2>
                 <p className="text-muted">View all your submitted reports</p>
+                <button onClick={fetchReports} className="btn btn-outline mt-4" style={{ fontSize: '0.875rem' }}>
+                    🔄 Refresh List
+                </button>
             </div>
 
             {/* Filters and Controls */}

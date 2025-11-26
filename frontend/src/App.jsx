@@ -48,64 +48,68 @@ function Layout({ children }) {
     );
 }
 
+import { ErrorBoundary } from './components/ErrorBoundary';
+
 function App() {
     return (
-        <BrowserRouter>
-            <Layout>
-                <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
+        <ErrorBoundary>
+            <BrowserRouter>
+                <Layout>
+                    <Routes>
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
 
-                    <Route
-                        path="/dashboard"
-                        element={
-                            <ProtectedRoute>
-                                <Dashboard />
-                            </ProtectedRoute>
-                        }
-                    />
+                        <Route
+                            path="/dashboard"
+                            element={
+                                <ProtectedRoute>
+                                    <Dashboard />
+                                </ProtectedRoute>
+                            }
+                        />
 
-                    <Route
-                        path="/create-report"
-                        element={
-                            <ProtectedRoute>
-                                <CreateReport />
-                            </ProtectedRoute>
-                        }
-                    />
+                        <Route
+                            path="/create-report"
+                            element={
+                                <ProtectedRoute>
+                                    <CreateReport />
+                                </ProtectedRoute>
+                            }
+                        />
 
-                    <Route
-                        path="/reports"
-                        element={
-                            <ProtectedRoute>
-                                <ReportsList />
-                            </ProtectedRoute>
-                        }
-                    />
+                        <Route
+                            path="/reports"
+                            element={
+                                <ProtectedRoute>
+                                    <ReportsList />
+                                </ProtectedRoute>
+                            }
+                        />
 
-                    <Route
-                        path="/reports/:id"
-                        element={
-                            <ProtectedRoute>
-                                <ReportDetail />
-                            </ProtectedRoute>
-                        }
-                    />
+                        <Route
+                            path="/reports/:id"
+                            element={
+                                <ProtectedRoute>
+                                    <ReportDetail />
+                                </ProtectedRoute>
+                            }
+                        />
 
-                    <Route
-                        path="/contact"
-                        element={
-                            <ProtectedRoute>
-                                <Contact />
-                            </ProtectedRoute>
-                        }
-                    />
+                        <Route
+                            path="/contact"
+                            element={
+                                <ProtectedRoute>
+                                    <Contact />
+                                </ProtectedRoute>
+                            }
+                        />
 
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                </Routes>
-            </Layout>
-        </BrowserRouter>
+                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                    </Routes>
+                </Layout>
+            </BrowserRouter>
+        </ErrorBoundary>
     );
 }
 

@@ -55,7 +55,7 @@ export function CreateReport() {
 
         setLoading(true);
         const formData = new FormData();
-        formData.append('file', mediaFile);
+        formData.append('media', mediaFile);
         formData.append('description', description);
         formData.append('behavior_rating', behaviorRating);
         formData.append('severity_index', severityIndex);
@@ -75,9 +75,6 @@ export function CreateReport() {
 
         try {
             await apiClient.post('/reports/', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
                 onUploadProgress: (progressEvent) => {
                     const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
                     setUploadProgress(percentCompleted);
@@ -86,7 +83,19 @@ export function CreateReport() {
             setShowSuccessModal(true);
         } catch (err) {
             console.error('Report submission error:', err);
-            setError(err.response?.data?.detail || 'Failed to create report. Please try again.');
+            let errorMessage = err.response?.data?.detail || 'Failed to create report. Please try again.';
+
+            // Parse Pydantic validation errors
+            if (Array.isArray(errorMessage)) {
+                errorMessage = errorMessage.map(e => {
+                    const field = e.loc[e.loc.length - 1];
+                    return `${field}: ${e.msg}`;
+                }).join('\n');
+            } else if (typeof errorMessage === 'object') {
+                errorMessage = JSON.stringify(errorMessage);
+            }
+
+            setError(errorMessage);
         } finally {
             setLoading(false);
             setUploadProgress(0);
@@ -119,7 +128,10 @@ export function CreateReport() {
                             padding: '0.75rem',
                             borderRadius: '4px',
                             marginBottom: '1rem',
-                            textAlign: 'center'
+                            borderRadius: '4px',
+                            marginBottom: '1rem',
+                            textAlign: 'left',
+                            whiteSpace: 'pre-wrap'
                         }}>
                             {error}
                         </div>
@@ -168,7 +180,7 @@ export function CreateReport() {
 
                         {locationError && (
                             <div className="text-muted mb-4" style={{ fontSize: '0.875rem', color: 'var(--warning)' }}>
-                                ⚠️ Location unavailable: {locationError}
+                                ⚠️ Location unavailable: {typeof locationError === 'object' ? locationError.message || JSON.stringify(locationError) : locationError}
                             </div>
                         )}
 
@@ -193,9 +205,9 @@ export function CreateReport() {
                             type="submit"
                             className="btn btn-primary w-100"
                             disabled={loading}
-                            style={{ padding: '1rem' }}
+                            style={{ padding: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}
                         >
-                            {loading ? t('submitting') : t('submit_report')}
+                            {loading ? t('submitting') : '🚀 Send Report'}
                         </button>
                     </form>
                 </div>
