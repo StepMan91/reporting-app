@@ -14,6 +14,7 @@ export function CreateReport() {
     const [behaviorRating, setBehaviorRating] = useState(0);
     const [severityIndex, setSeverityIndex] = useState(50);
     const [loading, setLoading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [error, setError] = useState('');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const { t } = useTranslation();
@@ -29,6 +30,7 @@ export function CreateReport() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setUploadProgress(0);
 
         if (!mediaFile) {
             setError('Please capture a photo or video');
@@ -76,13 +78,18 @@ export function CreateReport() {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    setUploadProgress(percentCompleted);
+                },
             });
             setShowSuccessModal(true);
         } catch (err) {
-            console.error(err);
-            setError(err.response?.data?.detail || 'Failed to create report');
+            console.error('Report submission error:', err);
+            setError(err.response?.data?.detail || 'Failed to create report. Please try again.');
         } finally {
             setLoading(false);
+            setUploadProgress(0);
         }
     };
 
@@ -162,6 +169,23 @@ export function CreateReport() {
                         {locationError && (
                             <div className="text-muted mb-4" style={{ fontSize: '0.875rem', color: 'var(--warning)' }}>
                                 ⚠️ Location unavailable: {locationError}
+                            </div>
+                        )}
+
+                        {loading && (
+                            <div className="mb-4">
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                                    <span>Uploading...</span>
+                                    <span>{uploadProgress}%</span>
+                                </div>
+                                <div style={{ width: '100%', height: '8px', background: '#e0e0e0', borderRadius: '4px', overflow: 'hidden' }}>
+                                    <div style={{
+                                        width: `${uploadProgress}%`,
+                                        height: '100%',
+                                        background: 'var(--primary)',
+                                        transition: 'width 0.3s ease'
+                                    }} />
+                                </div>
                             </div>
                         )}
 
