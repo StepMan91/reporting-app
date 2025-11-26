@@ -49,6 +49,7 @@ class ReportResponse(BaseModel):
     user_id: int
     media_type: str
     media_path: str
+    thumbnail_path: Optional[str] = None
     description: str
     behavior_rating: int
     severity_index: int
