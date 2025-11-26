@@ -93,27 +93,44 @@ export function ReportDetail() {
 
             <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
                 <div className="card">
-                    <div style={{ marginBottom: '1.5rem' }}>
+                    <div style={{
+                        width: '100%',
+                        borderRadius: 'var(--border-radius)',
+                        overflow: 'hidden',
+                        marginBottom: '1.5rem',
+                        background: 'var(--background)',
+                        border: '1px solid var(--border)'
+                    }}>
                         {report.media_type === 'image' ? (
-                            <img
-                                src={`/api/${report.media_path}`}
-                                alt="Report media"
-                                style={{
-                                    width: '100%',
-                                    borderRadius: 'var(--border-radius)',
-                                    maxHeight: '500px',
-                                    objectFit: 'cover'
-                                }}
-                            />
+                            <div>
+                                <img
+                                    src={report.thumbnail_path ? `/api/${report.thumbnail_path}` : `/api/${report.media_path}`}
+                                    alt="Report media"
+                                    style={{ width: '100%', maxHeight: '500px', objectFit: 'contain', display: 'block' }}
+                                    onError={(e) => {
+                                        if (report.thumbnail_path && e.target.src.includes(report.thumbnail_path)) {
+                                            e.target.src = `/api/${report.media_path}`;
+                                        }
+                                    }}
+                                />
+                                <div style={{ padding: '1rem', textAlign: 'center', borderTop: '1px solid var(--border)' }}>
+                                    <a
+                                        href={`/api/${report.media_path}`}
+                                        download
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="btn btn-outline"
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+                                    >
+                                        📥 Download High-Res Image
+                                    </a>
+                                </div>
+                            </div>
                         ) : (
                             <video
                                 src={`/api/${report.media_path}`}
                                 controls
-                                style={{
-                                    width: '100%',
-                                    borderRadius: 'var(--border-radius)',
-                                    maxHeight: '500px'
-                                }}
+                                style={{ width: '100%', maxHeight: '500px' }}
                             />
                         )}
                     </div>

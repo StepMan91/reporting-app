@@ -15,6 +15,7 @@ export function CreateReport() {
     const [severityIndex, setSeverityIndex] = useState(50);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
     const { t } = useTranslation();
 
     const navigate = useNavigate();
@@ -76,13 +77,17 @@ export function CreateReport() {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-            navigate('/reports');
+            setShowSuccessModal(true);
         } catch (err) {
             console.error(err);
             setError(err.response?.data?.detail || 'Failed to create report');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSuccessContinue = () => {
+        navigate('/dashboard');
     };
 
     return (
@@ -139,7 +144,7 @@ export function CreateReport() {
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label">{t('behavior_rating')}</label>
+                            <label className="form-label">Observed Behavior Rating (1-5 Stars)</label>
                             <StarRating
                                 value={behaviorRating}
                                 onChange={setBehaviorRating}
@@ -171,6 +176,33 @@ export function CreateReport() {
                     </form>
                 </div>
             </div>
+
+            {showSuccessModal && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1000
+                }}>
+                    <div className="card" style={{ maxWidth: '400px', width: '90%', textAlign: 'center' }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
+                        <h3 style={{ marginBottom: '1rem', color: 'var(--success)' }}>Report Submitted Successfully</h3>
+                        <p className="text-muted mb-4">Thank you for your contribution to safety.</p>
+                        <button
+                            onClick={handleSuccessContinue}
+                            className="btn btn-primary w-100"
+                        >
+                            Continue
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

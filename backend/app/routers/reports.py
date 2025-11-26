@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Tuple
+from datetime import datetime
 import os
 import uuid
 from pathlib import Path
+from PIL import Image
 from .. import models, schemas
 from ..database import get_db
 from ..dependencies import get_current_user
@@ -12,9 +14,10 @@ from ..config import settings
 router = APIRouter(prefix="/reports", tags=["reports"])
 
 
-def save_upload_file(upload_file: UploadFile, upload_dir: str) -> str:
+def save_upload_file(upload_file: UploadFile, upload_dir: str) -> Tuple[str, Optional[str]]:
     """
-    Save uploaded file and return the file path
+    Save uploaded file and return the file path and optional thumbnail path.
+    Ensures all paths use forward slashes.
     """
     # Create upload directory if it doesn't exist
     Path(upload_dir).mkdir(parents=True, exist_ok=True)
@@ -24,12 +27,39 @@ def save_upload_file(upload_file: UploadFile, upload_dir: str) -> str:
     unique_filename = f"{uuid.uuid4()}{file_extension}"
     file_path = os.path.join(upload_dir, unique_filename)
     
-    # Save file
+    # Save original file
     with open(file_path, "wb") as buffer:
         content = upload_file.file.read()
         buffer.write(content)
     
-    return file_path
+    # Generate thumbnail for images
+    thumbnail_path = None
+    if upload_file.content_type.startswith("image/"):
+        try:
+            with Image.open(file_path) as img:
+                # Convert to RGB if necessary (e.g. for PNGs with transparency)
+                if img.mode in ('RGBA', 'P'):
+                    img = img.convert('RGB')
+                
+                # Create thumbnail
+                img.thumbnail((300, 300))
+                
+                # Save thumbnail
+                thumb_filename = f"thumb_{unique_filename}"
+                thumb_path = os.path.join(upload_dir, thumb_filename)
+                img.save(thumb_path, "JPEG", quality=85)
+                
+                # Normalize path to use forward slashes
+                thumbnail_path = Path(thumb_path).as_posix()
+        except Exception as e:
+            print(f"Error generating thumbnail: {e}")
+            # If thumbnail generation fails, we just don't have a thumbnail
+            pass
+            
+    # Normalize original path to use forward slashes
+    normalized_file_path = Path(file_path).as_posix()
+    
+    return normalized_file_path, thumbnail_path
 
 
 @router.post("/", response_model=schemas.ReportResponse, status_code=status.HTTP_201_CREATED)
@@ -76,8 +106,8 @@ async def create_report(
             detail=f"Video size must not exceed {settings.MAX_VIDEO_SIZE / 1024 / 1024}MB"
         )
     
-    # Save media file
-    media_path = save_upload_file(media, settings.UPLOAD_DIR)
+    # Save media file and generate thumbnail
+    media_path, thumbnail_path = save_upload_file(media, settings.UPLOAD_DIR)
     
     # Get device info from User-Agent
     device_info = request.headers.get("user-agent", "Unknown")
@@ -87,6 +117,7 @@ async def create_report(
         user_id=current_user.id,
         media_type=media_type,
         media_path=media_path,
+        thumbnail_path=thumbnail_path,
         description=description,
         behavior_rating=behavior_rating,
         severity_index=severity_index,
@@ -105,15 +136,49 @@ async def create_report(
 
 @router.get("/", response_model=List[schemas.ReportResponse])
 async def list_reports(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100),
+    sort_by: str = Query("created_at", regex="^(created_at|behavior_rating|severity_index)$"),
+    sort_order: str = Query("desc", regex="^(asc|desc)$"),
+    date_from: Optional[datetime] = None,
+    date_to: Optional[datetime] = None,
+    rating_min: Optional[int] = Query(None, ge=1, le=5),
+    rating_max: Optional[int] = Query(None, ge=1, le=5),
+    severity_min: Optional[int] = Query(None, ge=0, le=100),
+    severity_max: Optional[int] = Query(None, ge=0, le=100),
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    List all reports for the current user
+    List reports with filtering, sorting, and pagination
     """
-    reports = db.query(models.Report).filter(
-        models.Report.user_id == current_user.id
-    ).order_by(models.Report.created_at.desc()).all()
+    query = db.query(models.Report).filter(models.Report.user_id == current_user.id)
+
+    # Apply filters
+    if date_from:
+        query = query.filter(models.Report.created_at >= date_from)
+    if date_to:
+        query = query.filter(models.Report.created_at <= date_to)
+    
+    if rating_min is not None:
+        query = query.filter(models.Report.behavior_rating >= rating_min)
+    if rating_max is not None:
+        query = query.filter(models.Report.behavior_rating <= rating_max)
+        
+    if severity_min is not None:
+        query = query.filter(models.Report.severity_index >= severity_min)
+    if severity_max is not None:
+        query = query.filter(models.Report.severity_index <= severity_max)
+
+    # Apply sorting
+    sort_column = getattr(models.Report, sort_by)
+    if sort_order == "desc":
+        query = query.order_by(sort_column.desc())
+    else:
+        query = query.order_by(sort_column.asc())
+
+    # Apply pagination
+    reports = query.offset(skip).limit(limit).all()
     
     return reports
 
@@ -163,7 +228,17 @@ async def delete_report(
     
     # Delete media file
     if os.path.exists(report.media_path):
-        os.remove(report.media_path)
+        try:
+            os.remove(report.media_path)
+        except OSError:
+            pass
+            
+    # Delete thumbnail if exists
+    if report.thumbnail_path and os.path.exists(report.thumbnail_path):
+        try:
+            os.remove(report.thumbnail_path)
+        except OSError:
+            pass
     
     db.delete(report)
     db.commit()

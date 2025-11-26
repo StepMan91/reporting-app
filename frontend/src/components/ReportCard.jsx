@@ -30,9 +30,15 @@ export function ReportCard({ report, onClick }) {
             }}>
                 {report.media_type === 'image' ? (
                     <img
-                        src={`/api/${report.media_path}`}
+                        src={report.thumbnail_path ? `/api/${report.thumbnail_path}` : `/api/${report.media_path}`}
                         alt="Report media"
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => {
+                            // Fallback to original if thumbnail fails
+                            if (report.thumbnail_path && e.target.src.includes(report.thumbnail_path)) {
+                                e.target.src = `/api/${report.media_path}`;
+                            }
+                        }}
                     />
                 ) : (
                     <video
