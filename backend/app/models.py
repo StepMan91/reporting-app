@@ -25,6 +25,7 @@ class Report(Base):
     # Media files
     media_type = Column(String, nullable=False)  # 'image' or 'video'
     media_path = Column(String, nullable=False)
+    thumbnail_path = Column(String, nullable=True)
     
     # Report content
     description = Column(Text, nullable=False)  # Max 150 words
