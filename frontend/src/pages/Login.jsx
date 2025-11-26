@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
-// import { animate } from 'animejs';
+// import anime from 'animejs';
 
 export function Login() {
     const [email, setEmail] = useState('');
@@ -15,36 +15,10 @@ export function Login() {
     const { t } = useTranslation();
     const logoRef = useRef(null);
 
+    /*
     useEffect(() => {
         // Anime.js animation for the logo
-        /*
-        animate({
-            targets: logoRef.current,
-            translateY: [-20, 0],
-            opacity: [0, 1],
-            duration: 1500,
-            easing: 'easeOutElastic(1, .8)',
-import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { useTranslation } from 'react-i18next';
-// import { animate } from 'animejs';
-
-export function Login() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-
-    const { login } = useAuth();
-    const navigate = useNavigate();
-    const { t } = useTranslation();
-    const logoRef = useRef(null);
-
-    useEffect(() => {
-        // Anime.js animation for the logo
-        /*
-        animate({
+        anime({
             targets: logoRef.current,
             translateY: [-20, 0],
             opacity: [0, 1],
@@ -52,8 +26,8 @@ export function Login() {
             easing: 'easeOutElastic(1, .8)',
             delay: 200
         });
-        */
     }, []);
+    */
 
     const handleSubmit = async (e) => {
         e.preventDefault();

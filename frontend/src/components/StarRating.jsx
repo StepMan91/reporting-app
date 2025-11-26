@@ -25,7 +25,7 @@ export function StarRating({ value, onChange, readonly = false }) {
                         background: 'none',
                         border: 'none',
                         cursor: readonly ? 'default' : 'pointer',
-                        color: star <= (hoverValue || value) ? '#f59e0b' : '#334155',
+                        color: star <= (hoverValue || value) ? 'var(--warning)' : 'var(--text-muted)',
                         transition: 'color 150ms',
                         padding: '0.25rem',
                     }}

@@ -1,8 +1,8 @@
 export function SeveritySlider({ value, onChange }) {
     const getSeverityColor = (val) => {
-        if (val < 30) return '#10b981'; // Green
-        if (val < 60) return '#f59e0b'; // Orange
-        return '#ef4444'; // Red
+        if (val < 30) return 'var(--success)';
+        if (val < 60) return 'var(--warning)';
+        return 'var(--error)';
     };
 
     return (
@@ -30,9 +30,9 @@ export function SeveritySlider({ value, onChange }) {
                     borderRadius: '4px',
                     outline: 'none',
                     background: `linear-gradient(to right, 
-            #10b981 0%, 
-            #f59e0b 50%, 
-            #ef4444 100%)`,
+            var(--success) 0%, 
+            var(--warning) 50%, 
+            var(--error) 100%)`,
                     cursor: 'pointer',
                     WebkitAppearance: 'none',
                 }}

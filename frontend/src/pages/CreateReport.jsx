@@ -15,197 +15,148 @@ export function CreateReport() {
     const [severityIndex, setSeverityIndex] = useState(50);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-
-    const { location } = useGeolocation();
-    const navigate = useNavigate();
     const { t } = useTranslation();
 
-    const wordCount = description.trim().split(/\s+/).filter(Boolean).length;
-    const isWordCountValid = wordCount > 0 && wordCount <= 150;
+    const navigate = useNavigate();
+    const { location, error: locationError } = useGeolocation();
 
-    const handleCapture = (file, cameraInfo) => {
+    const handleCapture = (file, camera) => {
         setMediaFile(file);
-        setCameraUsed(cameraInfo);
+        setCameraUsed(camera);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        if (!mediaFile) {
-            setError('Please capture a photo or video');
-            return;
-        }
-
-        if (!isWordCountValid) {
-            setError('Description must be between 1 and 150 words');
-            return;
-        }
-
-        if (behaviorRating === 0) {
-            setError('Please provide a behavior rating');
-            ```javascript
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { MediaCapture } from '../components/MediaCapture';
-import { StarRating } from '../components/StarRating';
-import { SeveritySlider } from '../components/SeveritySlider';
-import { useGeolocation } from '../hooks/useGeolocation';
-import { useTranslation } from 'react-i18next';
-import apiClient from '../api/client';
-
-export function CreateReport() {
-    const [mediaFile, setMediaFile] = useState(null);
-    const [cameraUsed, setCameraUsed] = useState(null);
-    const [description, setDescription] = useState('');
-    const [behaviorRating, setBehaviorRating] = useState(0);
-    const [severityIndex, setSeverityIndex] = useState(50);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-
-    const { location } = useGeolocation();
-    const navigate = useNavigate();
-    const { t } = useTranslation();
-
-    const wordCount = description.trim().split(/\s+/).filter(Boolean).length;
-    const isWordCountValid = wordCount > 0 && wordCount <= 150;
-
-    const handleCapture = (file, cameraInfo) => {
-        setMediaFile(file);
-        setCameraUsed(cameraInfo);
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        if (!mediaFile) {
-            setError('Please capture a photo or video');
-            return;
-        }
-
-        if (!isWordCountValid) {
-            setError('Description must be between 1 and 150 words');
-            return;
-        }
-
-        if (behaviorRating === 0) {
-            setError('Please provide a behavior rating');
-            return;
-        }
-
         setError('');
+
+        if (!mediaFile) {
+            setError('Please capture a photo or video');
+            return;
+        }
+
+        if (!description.trim()) {
+            setError('Please provide a description');
+            return;
+        }
+
+        const wordCount = description.trim().split(/\s+/).length;
+        if (wordCount > 150) {
+            setError('Description must be between 1 and 150 words');
+            return;
+        }
+
+        if (behaviorRating === 0) {
+            setError('Please provide a behavior rating');
+            return;
+        }
+
         setLoading(true);
+        const formData = new FormData();
+        formData.append('file', mediaFile);
+        formData.append('description', description);
+        formData.append('behavior_rating', behaviorRating);
+        formData.append('severity_index', severityIndex);
+
+        if (cameraUsed) {
+            formData.append('camera_used', cameraUsed);
+        }
+
+        if (location) {
+            formData.append('latitude', location.latitude);
+            formData.append('longitude', location.longitude);
+        }
+
+        // Add device info
+        const deviceInfo = `${navigator.platform} - ${navigator.userAgent}`;
+        formData.append('device_info', deviceInfo);
 
         try {
-            const formData = new FormData();
-            formData.append('media', mediaFile);
-            formData.append('description', description);
-            formData.append('behavior_rating', behaviorRating);
-            formData.append('severity_index', severityIndex);
-            
-            if (cameraUsed) {
-                formData.append('camera_used', cameraUsed);
-            }
-
-            if (location) {
-                formData.append('latitude', location.latitude);
-                formData.append('longitude', location.longitude);
-            }
-
             await apiClient.post('/reports/', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-
             navigate('/reports');
         } catch (err) {
-            setError(err.response?.data?.detail || t('error'));
+            console.error(err);
+            setError(err.response?.data?.detail || 'Failed to create report');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="flex-center flex-column">
-            <div style={{ width: '100%', maxWidth: '800px' }}>
-                <nav className="mb-4">
-                    <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}>
-                        <span>←</span> {t('dashboard')}
-                    </Link>
-                </nav>
+        <div className="flex-column gap-lg">
+            <nav className="mb-4">
+                <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}>
+                    <span>←</span> {t('dashboard')}
+                </Link>
+            </nav>
 
-                <div className="card">
-                    <div className="text-center mb-4">
-                        <h2 style={{ color: 'var(--secondary)', marginBottom: '0.5rem' }}>{t('create_report')}</h2>
-                        <p className="text-muted">Document the incident with details</p>
-                    </div>
+            <div className="text-center mb-4">
+                <h2 style={{ color: 'var(--secondary)', marginBottom: '0.5rem' }}>{t('create_new_report')}</h2>
+                <p className="text-muted">Document safety observations</p>
+            </div>
+
+            <div className="flex-center">
+                <div className="card" style={{ width: '100%', maxWidth: '600px' }}>
+                    {error && (
+                        <div style={{
+                            background: '#ffebee',
+                            color: '#c62828',
+                            padding: '0.75rem',
+                            borderRadius: '4px',
+                            marginBottom: '1rem',
+                            textAlign: 'center'
+                        }}>
+                            {error}
+                        </div>
+                    )}
 
                     <form onSubmit={handleSubmit}>
                         <div className="form-group">
-                            <label className="form-label">Media (Photo or Video)</label>
-                            <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--border-radius)', padding: '1rem', background: 'var(--background)' }}>
-                                <MediaCapture onCapture={handleCapture} maxDuration={15} />
-                            </div>
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Description</label>
-                            <textarea
-                                className="form-textarea"
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Describe what happened..."
-                                required
-                                rows="4"
-                            />
-                            <div style={{ textAlign: 'right', marginTop: '0.5rem', fontSize: '0.875rem' }}>
-                                <span style={{ color: wordCount > 150 ? 'var(--error)' : 'var(--text-muted)' }}>
-                                    {wordCount} / 150 words
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Behavior Rating</label>
-                            <div style={{ background: 'var(--background)', padding: '1rem', borderRadius: 'var(--border-radius)', textAlign: 'center' }}>
-                                <StarRating value={behaviorRating} onChange={setBehaviorRating} />
-                            </div>
-                            {behaviorRating === 0 && (
-                                <div style={{ color: 'var(--error)', fontSize: '0.875rem', marginTop: '0.5rem' }}>Please rate the behavior</div>
+                            <label className="form-label">{t('media_evidence')}</label>
+                            <MediaCapture onCapture={handleCapture} />
+                            {mediaFile && (
+                                <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--success)' }}>
+                                    ✅ Media captured
+                                </div>
                             )}
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label">Severity Index: {severityIndex}</label>
-                            <div style={{ background: 'var(--background)', padding: '1rem', borderRadius: 'var(--border-radius)' }}>
-                                <SeveritySlider value={severityIndex} onChange={setSeverityIndex} />
+                            <label className="form-label">{t('description')} (Max 150 words)</label>
+                            <textarea
+                                className="form-textarea"
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                placeholder="Describe what you observed..."
+                                rows={4}
+                            />
+                            <div className="text-right text-muted" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                                {description.trim().split(/\s+/).filter(w => w).length} / 150 words
                             </div>
                         </div>
 
-                        {location && (
-                            <div className="mb-4 text-center">
-                                <span style={{ 
-                                    background: 'var(--background)', 
-                                    padding: '0.5rem 1rem', 
-                                    borderRadius: '20px', 
-                                    fontSize: '0.875rem',
-                                    color: 'var(--text-muted)'
-                                }}>
-                                    📍 {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-                                </span>
-                            </div>
-                        )}
+                        <div className="form-group">
+                            <label className="form-label">{t('behavior_rating')}</label>
+                            <StarRating
+                                value={behaviorRating}
+                                onChange={setBehaviorRating}
+                            />
+                        </div>
 
-                        {error && (
-                            <div style={{ 
-                                background: '#ffebee', 
-                                color: '#c62828', 
-                                padding: '1rem', 
-                                borderRadius: 'var(--border-radius)', 
-                                marginBottom: '1.5rem',
-                                textAlign: 'center'
-                            }}>
-                                {error}
+                        <div className="form-group">
+                            <label className="form-label">{t('severity_index')}</label>
+                            <SeveritySlider
+                                value={severityIndex}
+                                onChange={setSeverityIndex}
+                            />
+                        </div>
+
+                        {locationError && (
+                            <div className="text-muted mb-4" style={{ fontSize: '0.875rem', color: 'var(--warning)' }}>
+                                ⚠️ Location unavailable: {locationError}
                             </div>
                         )}
 
@@ -215,7 +166,7 @@ export function CreateReport() {
                             disabled={loading}
                             style={{ padding: '1rem' }}
                         >
-                            {loading ? t('loading') : 'Submit Report'}
+                            {loading ? t('submitting') : t('submit_report')}
                         </button>
                     </form>
                 </div>
@@ -223,4 +174,3 @@ export function CreateReport() {
         </div>
     );
 }
-```

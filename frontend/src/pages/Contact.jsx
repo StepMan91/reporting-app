@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import apiClient from '../api/client';
+import { useTranslation } from 'react-i18next';
 
 export function Contact() {
     const [name, setName] = useState('');
@@ -9,6 +10,7 @@ export function Contact() {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
+    const { t } = useTranslation();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -35,88 +37,95 @@ export function Contact() {
     };
 
     return (
-        <>
-            <nav className="nav">
-                <div className="container nav-content">
-                    <Link to="/dashboard" className="nav-brand">Reporting</Link>
-                    <Link to="/dashboard" className="nav-link">← Back</Link>
-                </div>
+        <div className="flex-column gap-lg">
+            <nav className="mb-4">
+                <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}>
+                    <span>←</span> {t('dashboard')}
+                </Link>
             </nav>
 
-            <div className="page">
-                <div className="container" style={{ maxWidth: '600px' }}>
-                    <div className="page-header">
-                        <h1 className="page-title">Contact Admin</h1>
-                        <p className="text-muted">Send a message to the administrator</p>
-                    </div>
+            <div className="text-center mb-4">
+                <h2 style={{ color: 'var(--secondary)', marginBottom: '0.5rem' }}>{t('contact_admin')}</h2>
+                <p className="text-muted">Send a message to the administrator</p>
+            </div>
 
-                    <div className="card">
-                        <form onSubmit={handleSubmit}>
-                            <div className="form-group">
-                                <label className="form-label">Name</label>
-                                <input
-                                    type="text"
-                                    className="form-input"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    required
-                                    placeholder="Your name"
-                                />
+            <div className="flex-center">
+                <div className="card" style={{ width: '100%', maxWidth: '600px' }}>
+                    <form onSubmit={handleSubmit}>
+                        <div className="form-group">
+                            <label className="form-label">Name</label>
+                            <input
+                                type="text"
+                                className="form-input"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                required
+                                placeholder="Your name"
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Email</label>
+                            <input
+                                type="email"
+                                className="form-input"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                placeholder="your@email.com"
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Message</label>
+                            <textarea
+                                className="form-textarea"
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                required
+                                placeholder="What would you like to say?"
+                                style={{ minHeight: '150px' }}
+                            />
+                        </div>
+
+                        {success && (
+                            <div style={{
+                                padding: '1rem',
+                                background: 'rgba(16, 185, 129, 0.1)',
+                                border: '1px solid var(--success)',
+                                borderRadius: 'var(--border-radius)',
+                                color: 'var(--success)',
+                                marginBottom: '1.5rem',
+                                textAlign: 'center'
+                            }}>
+                                ✓ Message sent successfully! We'll get back to you soon.
                             </div>
+                        )}
 
-                            <div className="form-group">
-                                <label className="form-label">Email</label>
-                                <input
-                                    type="email"
-                                    className="form-input"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                    placeholder="your@email.com"
-                                />
+                        {error && (
+                            <div style={{
+                                background: '#ffebee',
+                                color: '#c62828',
+                                padding: '1rem',
+                                borderRadius: 'var(--border-radius)',
+                                marginBottom: '1.5rem',
+                                textAlign: 'center'
+                            }}>
+                                {error}
                             </div>
+                        )}
 
-                            <div className="form-group">
-                                <label className="form-label">Message</label>
-                                <textarea
-                                    className="form-textarea"
-                                    value={message}
-                                    onChange={(e) => setMessage(e.target.value)}
-                                    required
-                                    placeholder="What would you like to say?"
-                                    style={{ minHeight: '150px' }}
-                                />
-                            </div>
-
-                            {success && (
-                                <div style={{
-                                    padding: '1rem',
-                                    background: 'rgba(16, 185, 129, 0.1)',
-                                    border: '1px solid var(--success)',
-                                    borderRadius: 'var(--radius-md)',
-                                    color: 'var(--success)',
-                                    marginBottom: 'var(--spacing-md)'
-                                }}>
-                                    ✓ Message sent successfully! We'll get back to you soon.
-                                </div>
-                            )}
-
-                            {error && (
-                                <div className="error-text mb-md">{error}</div>
-                            )}
-
-                            <button
-                                type="submit"
-                                className="btn btn-primary"
-                                style={{ width: '100%' }}
-                                disabled={loading}
-                            >
-                                {loading ? 'Sending...' : 'Send Message'}
-                            </button>
-                        </form>
-                    </div>
+                        <button
+                            type="submit"
+                            className="btn btn-primary w-100"
+                            disabled={loading}
+                            style={{ padding: '1rem' }}
+                        >
+                            {loading ? 'Sending...' : 'Send Message'}
+                        </button>
+                    </form>
                 </div>
             </div>
-        </>
+        </div>
     );
 }
