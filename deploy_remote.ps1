@@ -25,7 +25,12 @@ scp -r frontend/src frontend/public frontend/package.json frontend/package-lock.
 Write-Host "Copying docker-compose.yml..."
 scp docker-compose.yml $Target`:$RemoteDir/
 
-# 5. Build and Deploy
+# 5. Copy Certificates
+Write-Host "Copying Certificates..."
+ssh $Target "mkdir -p $RemoteDir/certs"
+scp -r certs/* $Target`:$RemoteDir/certs/
+
+# 6. Build and Deploy
 Write-Host "Building and Deploying on Pi (This may take a while)..."
 ssh $Target "cd $RemoteDir && docker compose down && docker compose up -d --build"
 
