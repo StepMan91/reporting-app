@@ -35,5 +35,6 @@ Write-Host "Building and Deploying on Pi (This may take a while)..."
 ssh $Target "cd $RemoteDir && docker compose down && docker compose up -d --build"
 
 Write-Host "Deployment Complete!" -ForegroundColor Green
-Write-Host "Frontend: http://$RemoteHost:8081"
-Write-Host "Backend:  http://$RemoteHost:8001"
+Write-Host "Frontend (HTTPS): https://$RemoteHost:8443"
+Write-Host "Frontend (HTTP):  http://$RemoteHost:8081"
+Write-Host "Backend:          http://$RemoteHost:8001"
