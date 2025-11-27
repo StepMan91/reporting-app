@@ -8,7 +8,7 @@ export function Dashboard() {
 
     // Extract first name from email (e.g., "bastien.caspani@web.com" -> "Bastien")
     const firstName = user?.email
-        ? user.email.split('.')[0].charAt(0).toUpperCase() + user.email.split('.')[0].slice(1)
+        ? user.email.split('@')[0].split('.')[0].charAt(0).toUpperCase() + user.email.split('@')[0].split('.')[0].slice(1)
         : 'User';
 
     return (
